@@ -1,0 +1,4 @@
+# Test and lint tools.
+-r requirements.txt
+pytest==9.2.0
+ruff

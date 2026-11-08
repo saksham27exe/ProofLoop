@@ -1,0 +1,31 @@
+# Local data - never commit (database, sandboxes, evidence, reports, logs, benchmark output)
+data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+
+# Secrets / local configuration
+.env
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Model weights (managed by Ollama, never stored here)
+*.gguf
+models/

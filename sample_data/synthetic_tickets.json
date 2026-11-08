@@ -1,0 +1,162 @@
+[
+  {
+    "id": 1,
+    "title": "VPN disconnects every hour",
+    "description": "Synthetic ticket #1: vpn disconnects every hour.",
+    "priority": "medium",
+    "status": "resolved",
+    "assignee": "Hana Tanaka"
+  },
+  {
+    "id": 2,
+    "title": "Printer on floor 3 is jammed",
+    "description": "Synthetic ticket #2: printer on floor 3 is jammed.",
+    "priority": "critical",
+    "status": "resolved",
+    "assignee": "Hana Tanaka"
+  },
+  {
+    "id": 3,
+    "title": "Cannot access shared drive",
+    "description": "Synthetic ticket #3: cannot access shared drive.",
+    "priority": "critical",
+    "status": "resolved",
+    "assignee": null
+  },
+  {
+    "id": 4,
+    "title": "Laptop battery drains quickly",
+    "description": "Synthetic ticket #4: laptop battery drains quickly.",
+    "priority": "medium",
+    "status": "open",
+    "assignee": "Omar Haddad"
+  },
+  {
+    "id": 5,
+    "title": "Request for second monitor",
+    "description": "Synthetic ticket #5: request for second monitor.",
+    "priority": "medium",
+    "status": "open",
+    "assignee": "Priya Sharma"
+  },
+  {
+    "id": 6,
+    "title": "Email sync delayed on mobile",
+    "description": "Synthetic ticket #6: email sync delayed on mobile.",
+    "priority": "medium",
+    "status": "open",
+    "assignee": "Liam Nguyen"
+  },
+  {
+    "id": 7,
+    "title": "Password reset not received",
+    "description": "Synthetic ticket #7: password reset not received.",
+    "priority": "medium",
+    "status": "open",
+    "assignee": "Liam Nguyen"
+  },
+  {
+    "id": 8,
+    "title": "Conference room display flickers",
+    "description": "Synthetic ticket #8: conference room display flickers.",
+    "priority": "critical",
+    "status": "in_progress",
+    "assignee": "Omar Haddad"
+  },
+  {
+    "id": 9,
+    "title": "Software license renewal",
+    "description": "Synthetic ticket #9: software license renewal.",
+    "priority": "low",
+    "status": "open",
+    "assignee": "Omar Haddad"
+  },
+  {
+    "id": 10,
+    "title": "Slow Wi-Fi in east wing",
+    "description": "Synthetic ticket #10: slow wi-fi in east wing.",
+    "priority": "high",
+    "status": "open",
+    "assignee": null
+  },
+  {
+    "id": 11,
+    "title": "Expense tool returns error 500",
+    "description": "Synthetic ticket #11: expense tool returns error 500.",
+    "priority": "medium",
+    "status": "open",
+    "assignee": "Liam Nguyen"
+  },
+  {
+    "id": 12,
+    "title": "New hire onboarding checklist",
+    "description": "Synthetic ticket #12: new hire onboarding checklist.",
+    "priority": "high",
+    "status": "open",
+    "assignee": "Omar Haddad"
+  },
+  {
+    "id": 13,
+    "title": "Calendar invites show wrong time zone",
+    "description": "Synthetic ticket #13: calendar invites show wrong time zone.",
+    "priority": "high",
+    "status": "open",
+    "assignee": "Omar Haddad"
+  },
+  {
+    "id": 14,
+    "title": "Backup job failed overnight",
+    "description": "Synthetic ticket #14: backup job failed overnight.",
+    "priority": "medium",
+    "status": "in_progress",
+    "assignee": "Liam Nguyen"
+  },
+  {
+    "id": 15,
+    "title": "Request access to analytics dashboard",
+    "description": "Synthetic ticket #15: request access to analytics dashboard.",
+    "priority": "critical",
+    "status": "in_progress",
+    "assignee": "Liam Nguyen"
+  },
+  {
+    "id": 16,
+    "title": "Keyboard keys sticking",
+    "description": "Synthetic ticket #16: keyboard keys sticking.",
+    "priority": "medium",
+    "status": "open",
+    "assignee": "Omar Haddad"
+  },
+  {
+    "id": 17,
+    "title": "CRM export missing columns",
+    "description": "Synthetic ticket #17: crm export missing columns.",
+    "priority": "medium",
+    "status": "open",
+    "assignee": "Omar Haddad"
+  },
+  {
+    "id": 18,
+    "title": "Update antivirus definitions",
+    "description": "Synthetic ticket #18: update antivirus definitions.",
+    "priority": "high",
+    "status": "in_progress",
+    "assignee": "Priya Sharma"
+  },
+  {
+    "id": 19,
+    "title": "Projector remote missing",
+    "description": "Synthetic ticket #19: projector remote missing.",
+    "priority": "medium",
+    "status": "in_progress",
+    "assignee": "Priya Sharma"
+  },
+  {
+    "id": 20,
+    "title": "Badge reader offline at entrance",
+    "description": "Synthetic ticket #20: badge reader offline at entrance.",
+    "priority": "medium",
+    "status": "in_progress",
+    "assignee": "Omar Haddad"
+  }
+]

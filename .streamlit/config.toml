@@ -1,0 +1,41 @@
+# ProofLoop dashboard configuration.
+# Privacy: bind to localhost only and disable Streamlit's usage statistics.
+
+[server]
+address = "127.0.0.1"
+port = 8501
+headless = true
+runOnSave = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+serverAddress = "localhost"
+serverPort = 8501
+
+[client]
+toolbarMode = "minimal"
+showSidebarNavigation = true
+
+[theme]
+base = "light"
+primaryColor = "#4f46e5"
+backgroundColor = "#f6f7fb"
+secondaryBackgroundColor = "#eef0f7"
+textColor = "#0f172a"
+borderColor = "#e3e7ef"
+showWidgetBorder = true
+font = "Inter, 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif"
+headingFontWeights = [750, 700, 650]
+baseRadius = "0.7rem"
+buttonRadius = "0.6rem"
+linkColor = "#4f46e5"
+dataframeHeaderBackgroundColor = "#f1f3f9"
+
+[theme.sidebar]
+backgroundColor = "#0b1022"
+secondaryBackgroundColor = "#161d38"
+textColor = "#dbe2f3"
+primaryColor = "#a5b4fc"
+borderColor = "#232b4a"
+linkColor = "#c7d2fe"

@@ -1,0 +1,482 @@
+[
+  {
+    "id": 1001,
+    "name": "Felix Johansson",
+    "email": "felix.johansson@acme.example",
+    "department": "Legal",
+    "title": "Paralegal",
+    "phone": "+1-555-0119"
+  },
+  {
+    "id": 1002,
+    "name": "Ava Larsen",
+    "email": "ava.larsen@acme.example",
+    "department": "Human Resources",
+    "title": "HR Generalist",
+    "phone": "+1-555-0127"
+  },
+  {
+    "id": 1003,
+    "name": "Mateo Nguyen",
+    "email": "mateo.nguyen@acme.example",
+    "department": "Human Resources",
+    "title": "HR Generalist",
+    "phone": "+1-555-0119"
+  },
+  {
+    "id": 1004,
+    "name": "Ethan Johansson",
+    "email": "ethan.johansson@acme.example",
+    "department": "Sales",
+    "title": "Sales Manager",
+    "phone": "+1-555-0123"
+  },
+  {
+    "id": 1005,
+    "name": "Lucas Schmidt",
+    "email": "lucas.schmidt@acme.example",
+    "department": "Finance",
+    "title": "Accountant",
+    "phone": "+1-555-0187"
+  },
+  {
+    "id": 1006,
+    "name": "Elena Schmidt",
+    "email": "elena.schmidt@acme.example",
+    "department": "Support",
+    "title": "Support Specialist",
+    "phone": "+1-555-0109"
+  },
+  {
+    "id": 1007,
+    "name": "Jonas Fischer",
+    "email": "jonas.fischer@acme.example",
+    "department": "Finance",
+    "title": "Financial Analyst",
+    "phone": "+1-555-0107"
+  },
+  {
+    "id": 1008,
+    "name": "Nora Dubois",
+    "email": "nora.dubois@acme.example",
+    "department": "Engineering",
+    "title": "Engineering Manager",
+    "phone": "+1-555-0166"
+  },
+  {
+    "id": 1009,
+    "name": "Noah Larsen",
+    "email": "noah.larsen@acme.example",
+    "department": "Marketing",
+    "title": "Marketing Specialist",
+    "phone": "+1-555-0166"
+  },
+  {
+    "id": 1010,
+    "name": "Liam Reyes",
+    "email": "liam.reyes@acme.example",
+    "department": "Support",
+    "title": "Support Specialist",
+    "phone": "+1-555-0159"
+  },
+  {
+    "id": 1011,
+    "name": "Ethan Okafor",
+    "email": "ethan.okafor@acme.example",
+    "department": "Sales",
+    "title": "Sales Associate",
+    "phone": "+1-555-0161"
+  },
+  {
+    "id": 1012,
+    "name": "Chloe Garcia",
+    "email": "chloe.garcia@acme.example",
+    "department": "Engineering",
+    "title": "QA Engineer",
+    "phone": "+1-555-0144"
+  },
+  {
+    "id": 1013,
+    "name": "Lucas Mensah",
+    "email": "lucas.mensah@acme.example",
+    "department": "Legal",
+    "title": "Paralegal",
+    "phone": "+1-555-0137"
+  },
+  {
+    "id": 1014,
+    "name": "Amara Tanaka",
+    "email": "amara.tanaka@acme.example",
+    "department": "Engineering",
+    "title": "Software Engineer",
+    "phone": "+1-555-0131"
+  },
+  {
+    "id": 1015,
+    "name": "Alex Kim",
+    "email": "alex.kim1015@acme.example",
+    "department": "Engineering",
+    "title": "Software Engineer",
+    "phone": "+1-555-0154"
+  },
+  {
+    "id": 1016,
+    "name": "Mateo Okafor",
+    "email": "mateo.okafor@acme.example",
+    "department": "Human Resources",
+    "title": "HR Generalist",
+    "phone": "+1-555-0157"
+  },
+  {
+    "id": 1017,
+    "name": "Samir Sharma",
+    "email": "samir.sharma@acme.example",
+    "department": "Sales",
+    "title": "Sales Associate",
+    "phone": "+1-555-0101"
+  },
+  {
+    "id": 1018,
+    "name": "Felix Tanaka",
+    "email": "felix.tanaka@acme.example",
+    "department": "Operations",
+    "title": "Logistics Coordinator",
+    "phone": "+1-555-0176"
+  },
+  {
+    "id": 1019,
+    "name": "Yuki Nguyen",
+    "email": "yuki.nguyen@acme.example",
+    "department": "Support",
+    "title": "Support Lead",
+    "phone": "+1-555-0144"
+  },
+  {
+    "id": 1020,
+    "name": "Ethan Novak",
+    "email": "ethan.novak@acme.example",
+    "department": "Sales",
+    "title": "Sales Associate",
+    "phone": "+1-555-0101"
+  },
+  {
+    "id": 1021,
+    "name": "Samir Rossi",
+    "email": "samir.rossi@acme.example",
+    "department": "Support",
+    "title": "Support Lead",
+    "phone": "+1-555-0185"
+  },
+  {
+    "id": 1022,
+    "name": "Felix Novak",
+    "email": "felix.novak@acme.example",
+    "department": "Sales",
+    "title": "Sales Associate",
+    "phone": "+1-555-0194"
+  },
+  {
+    "id": 1023,
+    "name": "Hana Fischer",
+    "email": "hana.fischer@acme.example",
+    "department": "Engineering",
+    "title": "QA Engineer",
+    "phone": "+1-555-0140"
+  },
+  {
+    "id": 1024,
+    "name": "Jonas Larsen",
+    "email": "jonas.larsen@acme.example",
+    "department": "Engineering",
+    "title": "Engineering Manager",
+    "phone": "+1-555-0186"
+  },
+  {
+    "id": 1025,
+    "name": "Isla Kowalski",
+    "email": "isla.kowalski@acme.example",
+    "department": "Engineering",
+    "title": "Software Engineer",
+    "phone": "+1-555-0168"
+  },
+  {
+    "id": 1026,
+    "name": "Aarav Rossi",
+    "email": "aarav.rossi@acme.example",
+    "department": "Marketing",
+    "title": "Brand Manager",
+    "phone": "+1-555-0199"
+  },
+  {
+    "id": 1027,
+    "name": "Zara Garcia",
+    "email": "zara.garcia@acme.example",
+    "department": "Support",
+    "title": "Support Lead",
+    "phone": "+1-555-0135"
+  },
+  {
+    "id": 1028,
+    "name": "Kenji Tanaka",
+    "email": "kenji.tanaka@acme.example",
+    "department": "Finance",
+    "title": "Financial Analyst",
+    "phone": "+1-555-0138"
+  },
+  {
+    "id": 1029,
+    "name": "Mei Nguyen",
+    "email": "mei.nguyen@acme.example",
+    "department": "Support",
+    "title": "Support Specialist",
+    "phone": "+1-555-0168"
+  },
+  {
+    "id": 1030,
+    "name": "Amara Silva",
+    "email": "amara.silva@acme.example",
+    "department": "Legal",
+    "title": "Paralegal",
+    "phone": "+1-555-0133"
+  },
+  {
+    "id": 1031,
+    "name": "Arjun Rossi",
+    "email": "arjun.rossi@acme.example",
+    "department": "Operations",
+    "title": "Operations Analyst",
+    "phone": "+1-555-0172"
+  },
+  {
+    "id": 1032,
+    "name": "Ava Sharma",
+    "email": "ava.sharma@acme.example",
+    "department": "Support",
+    "title": "Support Specialist",
+    "phone": "+1-555-0138"
+  },
+  {
+    "id": 1033,
+    "name": "Victor Haddad",
+    "email": "victor.haddad@acme.example",
+    "department": "Support",
+    "title": "Support Specialist",
+    "phone": "+1-555-0153"
+  },
+  {
+    "id": 1034,
+    "name": "Diego Johansson",
+    "email": "diego.johansson@acme.example",
+    "department": "Support",
+    "title": "Support Specialist",
+    "phone": "+1-555-0147"
+  },
+  {
+    "id": 1035,
+    "name": "Hana Kowalski",
+    "email": "hana.kowalski@acme.example",
+    "department": "Operations",
+    "title": "Operations Analyst",
+    "phone": "+1-555-0194"
+  },
+  {
+    "id": 1036,
+    "name": "Tara Nguyen",
+    "email": "tara.nguyen@acme.example",
+    "department": "Operations",
+    "title": "Logistics Coordinator",
+    "phone": "+1-555-0196"
+  },
+  {
+    "id": 1037,
+    "name": "Lucas Dubois",
+    "email": "lucas.dubois@acme.example",
+    "department": "Legal",
+    "title": "Paralegal",
+    "phone": "+1-555-0113"
+  },
+  {
+    "id": 1038,
+    "name": "Ravi Okafor",
+    "email": "ravi.okafor@acme.example",
+    "department": "Support",
+    "title": "Support Specialist",
+    "phone": "+1-555-0181"
+  },
+  {
+    "id": 1039,
+    "name": "Diego Patel",
+    "email": "diego.patel@acme.example",
+    "department": "Engineering",
+    "title": "QA Engineer",
+    "phone": "+1-555-0178"
+  },
+  {
+    "id": 1040,
+    "name": "Hana Sharma",
+    "email": "hana.sharma@acme.example",
+    "department": "Marketing",
+    "title": "Marketing Specialist",
+    "phone": "+1-555-0126"
+  },
+  {
+    "id": 1041,
+    "name": "Kenji Ali",
+    "email": "kenji.ali@acme.example",
+    "department": "Human Resources",
+    "title": "HR Manager",
+    "phone": "+1-555-0192"
+  },
+  {
+    "id": 1042,
+    "name": "Hana Dubois",
+    "email": "hana.dubois@acme.example",
+    "department": "Human Resources",
+    "title": "Recruiter",
+    "phone": "+1-555-0183"
+  },
+  {
+    "id": 1043,
+    "name": "Elena Nguyen",
+    "email": "elena.nguyen@acme.example",
+    "department": "Legal",
+    "title": "Counsel",
+    "phone": "+1-555-0188"
+  },
+  {
+    "id": 1044,
+    "name": "Yuki Okafor",
+    "email": "yuki.okafor@acme.example",
+    "department": "Finance",
+    "title": "Financial Analyst",
+    "phone": "+1-555-0112"
+  },
+  {
+    "id": 1045,
+    "name": "Mei Rossi",
+    "email": "mei.rossi@acme.example",
+    "department": "Engineering",
+    "title": "Software Engineer",
+    "phone": "+1-555-0159"
+  },
+  {
+    "id": 1046,
+    "name": "Omar Sharma",
+    "email": "omar.sharma@acme.example",
+    "department": "Sales",
+    "title": "Account Executive",
+    "phone": "+1-555-0114"
+  },
+  {
+    "id": 1047,
+    "name": "Omar Garcia",
+    "email": "omar.garcia@acme.example",
+    "department": "Human Resources",
+    "title": "HR Generalist",
+    "phone": "+1-555-0111"
+  },
+  {
+    "id": 1048,
+    "name": "Alex Kim",
+    "email": "alex.kim1048@acme.example",
+    "department": "Sales",
+    "title": "Account Executive",
+    "phone": "+1-555-0124"
+  },
+  {
+    "id": 1049,
+    "name": "Elena Johansson",
+    "email": "elena.johansson@acme.example",
+    "department": "Engineering",
+    "title": "QA Engineer",
+    "phone": "+1-555-0111"
+  },
+  {
+    "id": 1050,
+    "name": "Leah Costa",
+    "email": "leah.costa@acme.example",
+    "department": "Marketing",
+    "title": "Brand Manager",
+    "phone": "+1-555-0171"
+  },
+  {
+    "id": 1051,
+    "name": "Isla Patel",
+    "email": "isla.patel@acme.example",
+    "department": "Legal",
+    "title": "Counsel",
+    "phone": "+1-555-0189"
+  },
+  {
+    "id": 1052,
+    "name": "Priya Johansson",
+    "email": "priya.johansson@acme.example",
+    "department": "Legal",
+    "title": "Counsel",
+    "phone": "+1-555-0182"
+  },
+  {
+    "id": 1053,
+    "name": "Lucas Novak",
+    "email": "lucas.novak@acme.example",
+    "department": "Engineering",
+    "title": "Software Engineer",
+    "phone": "+1-555-0193"
+  },
+  {
+    "id": 1054,
+    "name": "Chloe Mensah",
+    "email": "chloe.mensah@acme.example",
+    "department": "Legal",
+    "title": "Paralegal",
+    "phone": "+1-555-0167"
+  },
+  {
+    "id": 1055,
+    "name": "Elena Larsen",
+    "email": "elena.larsen@acme.example",
+    "department": "Finance",
+    "title": "Accountant",
+    "phone": "+1-555-0197"
+  },
+  {
+    "id": 1056,
+    "name": "Maya Patel",
+    "email": "maya.patel@acme.example",
+    "department": "Engineering",
+    "title": "Engineering Manager",
+    "phone": "+1-555-0193"
+  },
+  {
+    "id": 1057,
+    "name": "Kenji Johansson",
+    "email": "kenji.johansson@acme.example",
+    "department": "Operations",
+    "title": "Logistics Coordinator",
+    "phone": "+1-555-0152"
+  },
+  {
+    "id": 1058,
+    "name": "Ethan Nguyen",
+    "email": "ethan.nguyen@acme.example",
+    "department": "Sales",
+    "title": "Sales Associate",
+    "phone": "+1-555-0167"
+  },
+  {
+    "id": 1059,
+    "name": "Nora Rossi",
+    "email": "nora.rossi@acme.example",
+    "department": "Marketing",
+    "title": "Content Lead",
+    "phone": "+1-555-0133"
+  },
+  {
+    "id": 1060,
+    "name": "Diego Mensah",
+    "email": "diego.mensah@acme.example",
+    "department": "Human Resources",
+    "title": "HR Manager",
+    "phone": "+1-555-0181"
+  }
+]
