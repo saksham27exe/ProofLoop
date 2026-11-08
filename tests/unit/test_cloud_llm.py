@@ -23,16 +23,20 @@ GOOD = {"operation": "UPDATE", "entity": "employee", "target_id": "1042", "targe
         "confidence": 0.9, "ambiguities": []}
 
 
+SLEPT: list[float] = []
+
+
 def _provider(handler, key: str | None = KEY, retries: int = 2) -> CloudProvider:
-    return CloudProvider("https://integrate.api.nvidia.com/v1", "meta/llama-3.3-70b-instruct",
-                         SecretStr(key) if key else None, max_retries=retries, transport=httpx.MockTransport(handler))
+    return CloudProvider("https://integrate.api.nvidia.com/v1", "nvidia/nemotron-3.5-lightning-30b-a3b",
+                         SecretStr(key) if key else None, max_retries=retries, transport=httpx.MockTransport(handler),
+                         sleep=SLEPT.append)
 
 
 def _reply(content: str = "", tool_calls: list | None = None) -> httpx.Response:
     msg: dict = {"role": "assistant", "content": content}
     if tool_calls:
         msg["tool_calls"] = tool_calls
-    return httpx.Response(200, json={"model": "meta/llama-3.3-70b-instruct", "choices": [{"message": msg}]})
+    return httpx.Response(200, json={"model": "nvidia/nemotron-3.5-lightning-30b-a3b", "choices": [{"message": msg}]})
 
 
 def test_refuses_plain_http_endpoint():
@@ -148,7 +152,7 @@ def test_consent_is_recorded_and_audited(keyed_client):
     assert KEY not in json.dumps(view)  # the key itself is never returned
 
     r = keyed_client.put("/settings", headers=h, json={"llm_backend": "cloud", "cloud_consent": True,
-                                                         "cloud_model": "meta/llama-3.1-70b-instruct"})
+                                                         "cloud_model": "nvidia/nemotron-3.5-super-vl-120b-a12b"})
     assert r.status_code == 200 and r.json()["runtime"]["llm_backend"] == "cloud"
     view = keyed_client.get("/settings", headers=h).json()
     assert view["cloud"]["active"] and view["cloud"]["consent"]["accepted_by"] == "admin"
@@ -173,3 +177,60 @@ def test_nvidia_keys_are_redacted_from_traces():
     from app.utils.security import redact_string
 
     assert "nvapi-" not in redact_string("use key nvapi-AbCdEf0123456789xyz_LONG please")
+
+
+def test_reasoning_blocks_are_stripped_from_answers_and_tool_turns():
+    from app.interpretation.verification_plan import InterpretationDraft
+
+    def handler(request):
+        if json.loads(request.content).get("tools"):
+            return _reply("<think>which tool?</think>DONE: updated customer 5.")
+        return _reply("<think>the user wants {an update}</think>" + json.dumps(GOOD))
+
+    p = _provider(handler)
+    assert p.generate("p", response_schema=InterpretationDraft).parsed.target_id == "1042"
+    tools = [{"type": "function", "function": {"name": "t", "parameters": {"type": "object"}}}]
+    assert p.chat_with_tools([{"role": "user", "content": "x"}], tools)[0]["content"] == "DONE: updated customer 5."
+
+
+def test_reasoning_that_exhausts_the_budget_is_a_clear_error():
+    def handler(request):
+        return httpx.Response(200, json={"choices": [{"finish_reason": "length",
+                                                      "message": {"role": "assistant", "content": "<think>long..."}}]})
+
+    with pytest.raises(LLMError, match="reasoning"):
+        _provider(handler).generate("p")
+
+
+def test_live_catalog_lists_only_chat_models_and_sends_no_key():
+    def handler(request):
+        assert "Authorization" not in request.headers
+        return httpx.Response(200, json={"data": [{"id": "nvidia/nemotron-3.5-lightning-30b-a3b"},
+                                                  {"id": "nvidia/nemotron-3.5-embed-8b"}, {"id": "meta/llama-guard-4-12b"},
+                                                  {"id": "deepseek-ai/deepseek-v4.1-flash"}]})
+
+    assert _provider(handler).list_models() == ["deepseek-ai/deepseek-v4.1-flash", "nvidia/nemotron-3.5-lightning-30b-a3b"]
+
+
+def test_recommended_cloud_models_are_in_the_live_catalog_snapshot():
+    """Guards against recommending retired models (catalog snapshot taken from the NIM /v1/models list, 2026-11-08)."""
+    from app.config import Settings
+    from app.llm.model_manager import RECOMMENDED_CLOUD_MODELS
+
+    snapshot = {"nvidia/nemotron-3.5-lightning-30b-a3b", "nvidia/nemotron-3.5-super-vl-120b-a12b", "deepseek-ai/deepseek-v4.1-flash"}
+    assert {m["name"] for m in RECOMMENDED_CLOUD_MODELS} <= snapshot
+    assert Settings.model_fields["cloud_model"].default in snapshot
+
+
+def test_rate_limit_is_retried_with_backoff_then_succeeds():
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        if len(calls) <= 2:
+            return httpx.Response(429, headers={"Retry-After": "3"} if len(calls) == 1 else {}, json={})
+        return _reply("ok")
+
+    SLEPT.clear()
+    assert _provider(handler).generate("p").text == "ok"
+    assert len(calls) == 3 and SLEPT == [3.0, 4.0]  # Retry-After honoured, then exponential backoff

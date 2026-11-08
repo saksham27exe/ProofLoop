@@ -19,7 +19,7 @@ from typing import Any
 from app.agent.agent_adapter import InstrumentedToolbox
 from app.agent.base_agent import AgentRunResult, BaseAgent
 from app.collector.trace_collector import TraceCollector
-from app.environments.base import Environment
+from app.environments.base import Environment, Toolbox
 from app.llm.base import LLMError, LLMProvider
 
 MAX_STEPS = 10
@@ -107,15 +107,17 @@ class ToolCallingAgent(BaseAgent):
     name = "proofloop-ai-agent"
     framework = "ollama-tool-calling"
 
-    def __init__(self, env: Environment, provider: LLMProvider, max_steps: int = MAX_STEPS) -> None:
+    def __init__(self, env: Environment, provider: LLMProvider, max_steps: int = MAX_STEPS,
+                 toolbox: Toolbox | None = None) -> None:
         self.env = env
+        self._toolbox = toolbox  # e.g. a PolicyToolbox; defaults to the environment's own toolbox
         self.provider = provider
         self.max_steps = max_steps
         self.backend = getattr(provider, "name", "ollama")
         self.framework = "cloud-tool-calling" if self.backend == "cloud" else "ollama-tool-calling"
 
     def run(self, instruction: str, collector: TraceCollector) -> AgentRunResult:
-        tools = InstrumentedToolbox(self.env.toolbox(), collector)
+        tools = InstrumentedToolbox(self._toolbox or self.env.toolbox(), collector)
         tool_defs = _tool_defs(self.env)
         names = {d["function"]["name"] for d in tool_defs}
         messages: list[dict[str, Any]] = [

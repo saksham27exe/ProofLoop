@@ -26,6 +26,7 @@ from app.collector.trace_storage import TraceStorage
 from app.database import repositories as repo
 from app.database.models import Execution, User
 from app.services.execution_service import ExecutionError, load_scenarios
+from app.services.external_sessions import EventsRequest, SessionFinish, SessionStart, ToolCallRequest
 from app.utils.timeutil import iso
 
 router = APIRouter(prefix="/executions", tags=["executions"])
@@ -196,3 +197,61 @@ def get_report(exec_id: str, _: User = Depends(current_user), session: Session =
     if report is None:
         raise HTTPException(status_code=404, detail={"code": "not_verified", "message": "This execution has not been verified yet."})
     return report.report_data
+
+
+# ------------------------------------------------------------------ your own agent (verification sessions)
+@router.post("/{exec_id}/session/start", tags=["external agents"])
+def start_session(exec_id: str, body: SessionStart, user: User = Depends(require_role("analyst")),
+                  ctx: AppContext = Depends(get_ctx)) -> dict[str, Any]:
+    """Start verifying your own agent: backup + independent before-snapshot; returns the tools it may call."""
+    try:
+        return ctx.sessions.start(exec_id, body, user=user)
+    except ExecutionError as err:
+        raise http_error(err) from None
+
+
+@router.get("/{exec_id}/session/tools", tags=["external agents"])
+def session_tools(exec_id: str, _: User = Depends(current_user), ctx: AppContext = Depends(get_ctx),
+                  session: Session = Depends(get_session)) -> list[dict[str, Any]]:
+    """OpenAI-style function definitions of the tools available in this session."""
+    return ctx.sessions.tool_specs(_get(session, exec_id).environment)
+
+
+@router.post("/{exec_id}/session/tools/{tool}", tags=["external agents"])
+def session_call_tool(exec_id: str, tool: str, body: ToolCallRequest, _: User = Depends(require_role("analyst")),
+                      ctx: AppContext = Depends(get_ctx)) -> dict[str, Any]:
+    """Run one tool for the agent. Checked against the write policy and recorded in the hash-chained trace."""
+    try:
+        return ctx.sessions.call_tool(exec_id, tool, body.arguments)
+    except ExecutionError as err:
+        raise http_error(err) from None
+
+
+@router.post("/{exec_id}/session/events", tags=["external agents"])
+def session_events(exec_id: str, body: EventsRequest, _: User = Depends(require_role("analyst")),
+                   ctx: AppContext = Depends(get_ctx)) -> dict[str, Any]:
+    """Report tool calls the agent made itself (outside ProofLoop's tools), or notes."""
+    try:
+        return ctx.sessions.record_events(exec_id, body.events)
+    except ExecutionError as err:
+        raise http_error(err) from None
+
+
+@router.post("/{exec_id}/session/finish", tags=["external agents"])
+def finish_session(exec_id: str, body: SessionFinish, user: User = Depends(require_role("analyst")),
+                   ctx: AppContext = Depends(get_ctx)) -> dict[str, Any]:
+    """Record the agent's claim, take the after-snapshot and verify. Returns the immutable report."""
+    try:
+        return ctx.sessions.finish(exec_id, body, user=user)
+    except ExecutionError as err:
+        raise http_error(err) from None
+
+
+@router.post("/{exec_id}/session/abort", tags=["external agents"])
+def abort_session(exec_id: str, user: User = Depends(require_role("analyst")), ctx: AppContext = Depends(get_ctx),
+                  reason: str = Query("", max_length=300)) -> dict[str, Any]:
+    """Abandon the session without verifying (the backup stays available for 'Undo run')."""
+    try:
+        return ctx.sessions.abort(exec_id, user=user, reason=reason)
+    except ExecutionError as err:
+        raise http_error(err) from None

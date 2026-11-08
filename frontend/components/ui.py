@@ -82,6 +82,17 @@ def current_user() -> dict:
     return st.session_state.get("user") or {}
 
 
+def cloud_active() -> bool:
+    """True when the backend's last reported LLM status says the cloud model is in use."""
+    return (st.session_state.get("_llm_status") or {}).get("backend") == "cloud"
+
+
+def model_phrase() -> str:
+    """Short description of the active model for user-facing messages."""
+    llm = st.session_state.get("_llm_status") or {}
+    return f"the cloud model ({llm.get('model', '?')})" if cloud_active() else "the local LLM"
+
+
 def has_role(minimum: str) -> bool:
     rank = {"viewer": 0, "analyst": 1, "admin": 2}
     return rank.get(current_user().get("role", "viewer"), 0) >= rank[minimum]

@@ -12,11 +12,14 @@ from frontend.components.ui import (
     call,
     chip,
     claim_vs_reality,
+    cloud_active,
+    current_user,
     env_chip,
     esc,
     goto,
     has_role,
     kv,
+    model_phrase,
     page_header,
     show_html,
     undo_panel,
@@ -141,8 +144,12 @@ def review_dialog() -> None:
     blocked = (plan.get("requires_approval") and not approved) or (detail["execution_status"] == "needs_clarification" and not force)
     c1, c2 = st.columns([2, 1])
     if c1.button("Run agent & verify", type="primary", icon=":material/play_arrow:", width="stretch", disabled=bool(blocked)):
-        wait = ("The AI agent is working (each step is a local-model call; on a CPU this can take a few minutes)..."
-                if detail.get("real_data") else "Running the agent and independently verifying the outcome...")
+        if not detail.get("real_data"):
+            wait = "Running the agent and independently verifying the outcome..."
+        elif cloud_active():
+            wait = f"The AI agent is working on {model_phrase()} (usually 5-30 s)..."
+        else:
+            wait = "The AI agent is working (each step is a local-model call; on a CPU this can take a few minutes)..."
         with st.spinner(wait, show_time=True):
             try:
                 res = api().run_execution(detail["id"], approved=approved, force=force, verify=True)
@@ -159,8 +166,11 @@ def review_dialog() -> None:
 
 def _create_and_maybe_run(body: dict, auto_run: bool) -> None:
     try:
-        with st.spinner("Interpreting the task... free-form wording is read by the local LLM, which can take "
-                        "10-60 s on a CPU-only machine.", show_time=True):
+        msg = (f"Interpreting the task... free-form wording is read by {model_phrase()} (usually a few seconds)."
+               if cloud_active() else
+               "Interpreting the task... free-form wording is read by the local LLM, which can take 10-60 s on a "
+               "CPU-only machine.")
+        with st.spinner(msg, show_time=True):
             detail = api().create_execution(**body)
     except ApiError as err:
         st.error(err.message, icon=":material/error:")
@@ -220,8 +230,8 @@ def _custom_tab(can_run: bool) -> None:
                 if st.button(ex, key=f"ex_{ex}", type="tertiary", width="stretch"):
                     st.session_state["custom_instruction"] = ex
                     st.rerun()
-            st.caption("The local LLM accepts free-form phrasing. In verification-only mode the deterministic "
-                       "interpreter supports the documented grammar (see README).")
+            st.caption(f"{model_phrase()[0].upper() + model_phrase()[1:]} accepts free-form phrasing. In verification-only "
+                       "mode the deterministic interpreter supports the documented grammar (see README).")
     with left:
         env = st.selectbox("Environment", list(ENV_LABEL), format_func=lambda e: ENV_LABEL[e], key="custom_env")
         instruction = st.text_area("Task instruction for the agent", key="custom_instruction", height=110,
@@ -261,7 +271,7 @@ def _real_tab(can_run: bool) -> None:
         st.caption(src["description"] + "  ·  " + ", ".join(e["display_name"] for e in src["entities"][:8]))
         instruction = st.text_area("What should the AI agent do?", key="real_instruction", height=110, max_chars=2000,
                                    placeholder="e.g. Give every customer in Oslo the gold tier")
-        st.caption("Agent: **AI agent on your local model** - it explores the data, decides its own steps and reports back. "
+        st.caption(f"Agent: **AI agent on {model_phrase()}** - it explores the data, decides its own steps and reports back. "
                    "Nothing is scripted or injected. A backup is taken before it starts.")
         if st.button("Interpret task", type="primary", icon=":material/psychology:", key="real_go",
                      disabled=not can_run or not instruction.strip()):
@@ -280,6 +290,41 @@ def _real_tab(can_run: bool) -> None:
                 st.caption("Describe a change to one record (by id) or to every record matching a condition, e.g. "
                            "'Set the status of all orders older than 2025-01-01 to archived'.")
             st.caption("One change per task: a single record, or every record matching a condition.")
+
+
+OWN_AGENT_SNIPPET = """import sys; sys.path.insert(0, r"{sdk}")
+from proofloop_sdk import ProofLoop
+
+pl = ProofLoop("http://127.0.0.1:8000", username="{user}", password="...")
+with pl.session("Give every customer in Oslo the gold tier", source="src_practice",
+                agent_name="my-agent", framework="langgraph") as s:
+    # Hand these to any framework: s.openai_tools (OpenAI-style specs) or s.tools() (Python functions)
+    s.call("find_rows", table="customers", where={{"city": "Oslo"}})
+    s.call("update_rows", table="customers", where={{"city": "Oslo"}}, values={{"tier": "gold"}})
+    s.finish("DONE: set the Oslo customers to gold")
+
+print(s.verdict, "-", s.report["summary"])"""
+
+
+def _own_agent_tab() -> None:
+    """Bring your own agent: LangChain, CrewAI, AutoGen, plain Python or any language over HTTP."""
+    st.markdown("Verify **any** agent - LangChain, LangGraph, CrewAI, AutoGen, the OpenAI/Anthropic SDKs, plain Python "
+                "or another language. Observability tools record what an agent *says* it did; ProofLoop checks what "
+                "*actually* changed in the data.")
+    a, b, c = st.columns(3)
+    a.markdown("**1 · Start a session**  \nProofLoop interprets the task, backs up the source and takes its own "
+               "*before* snapshot.")
+    b.markdown("**2 · Your agent works**  \nIt calls ProofLoop's tools (checked against the write policy and traced "
+               "automatically) - or uses its own tools and reports each call.")
+    c.markdown("**3 · Finish**  \nProofLoop takes the *after* snapshot and returns VERIFIED / FAILED / INCONCLUSIVE "
+               "with evidence. The agent's claim is recorded, never trusted.")
+    from pathlib import Path as _P
+
+    sdk_dir = str(_P(__file__).resolve().parents[2] / "sdk")
+    st.code(OWN_AGENT_SNIPPET.format(sdk=sdk_dir, user=(current_user().get("username") or "you")), language="python")
+    st.caption("SDK: `sdk/proofloop_sdk.py` (single file, needs only httpx) · full example: `examples/own_agent.py` · "
+               "REST endpoints under **/executions/{id}/session/** in the API docs (http://localhost:8000/docs). "
+               "Results appear in History and Verification Results like any other run.")
 
 
 def render() -> None:
@@ -325,10 +370,12 @@ def render() -> None:
     if open_review and pending:
         review_dialog()
 
-    tab0, tab1, tab2 = st.tabs(["Real data · AI agent", "Guided scenarios (demo)", "Sandbox task (demo)"])
+    tab0, tab1, tab2, tab3 = st.tabs(["Real data · AI agent", "Your own agent", "Guided scenarios (demo)", "Sandbox task (demo)"])
     with tab0:
         _real_tab(can_run)
     with tab1:
-        _scenarios_tab(can_run)
+        _own_agent_tab()
     with tab2:
+        _scenarios_tab(can_run)
+    with tab3:
         _custom_tab(can_run)

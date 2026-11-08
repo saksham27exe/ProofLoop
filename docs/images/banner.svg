@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-label="ProofLoop - independent outcome verification for AI agents">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="0.55" stop-color="#1e1b4b"/>
+      <stop offset="1" stop-color="#312e81"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366f1"/><stop offset="0.55" stop-color="#8b5cf6"/><stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.82" cy="0.2" r="0.6">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.28"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="320" rx="24" fill="url(#bg)"/>
+  <rect width="1280" height="320" rx="24" fill="url(#grid)"/>
+  <rect width="1280" height="320" rx="24" fill="url(#glow)"/>
+
+  <!-- mark -->
+  <g transform="translate(72 74)">
+    <rect width="104" height="104" rx="28" fill="url(#mark)"/>
+    <path d="M52 20l27 11.4v20.6c0 17.4-11.4 32.2-27 37.9-15.6-5.7-27-20.5-27-37.9V31.4L52 20z" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M38.5 53.2l9.4 9.4 18.2-19.8" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="204" y="126" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="64" font-weight="800" fill="#f8fafc" letter-spacing="-1.5">ProofLoop</text>
+  <text x="206" y="166" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="23" font-weight="600" fill="#c7d2fe">Independent outcome verification for AI agents</text>
+  <text x="206" y="204" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="19" fill="#94a3b8">Don't trust what an AI agent says it did. Verify what actually happened.</text>
+
+  <!-- verdict pills -->
+  <g font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="0.8">
+    <g transform="translate(206 236)">
+      <rect width="128" height="36" rx="18" fill="#052e1c" stroke="#10b981" stroke-width="1.5"/>
+      <circle cx="22" cy="18" r="6" fill="#10b981"/>
+      <text x="36" y="23.5" fill="#6ee7b7">VERIFIED</text>
+    </g>
+    <g transform="translate(346 236)">
+      <rect width="110" height="36" rx="18" fill="#3b0d0d" stroke="#ef4444" stroke-width="1.5"/>
+      <circle cx="22" cy="18" r="6" fill="#ef4444"/>
+      <text x="36" y="23.5" fill="#fca5a5">FAILED</text>
+    </g>
+    <g transform="translate(468 236)">
+      <rect width="168" height="36" rx="18" fill="#3a2506" stroke="#f59e0b" stroke-width="1.5"/>
+      <circle cx="22" cy="18" r="6" fill="#f59e0b"/>
+      <text x="36" y="23.5" fill="#fcd34d">INCONCLUSIVE</text>
+    </g>
+  </g>
+
+  <!-- claim vs reality card -->
+  <g transform="translate(820 64)" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif">
+    <rect width="388" height="192" rx="18" fill="#0f172a" fill-opacity="0.82" stroke="#334155"/>
+    <text x="24" y="38" font-size="12" font-weight="700" fill="#94a3b8" letter-spacing="1.2">AGENT CLAIMED</text>
+    <text x="24" y="64" font-size="16" fill="#e2e8f0" font-style="italic">"DONE: updated customer 12."</text>
+    <line x1="24" y1="86" x2="364" y2="86" stroke="#334155"/>
+    <text x="24" y="114" font-size="12" font-weight="700" fill="#94a3b8" letter-spacing="1.2">WHAT ACTUALLY HAPPENED</text>
+    <text x="24" y="140" font-size="16" fill="#fca5a5">Modified customer 13 instead of 12</text>
+    <g transform="translate(24 156)">
+      <rect width="96" height="24" rx="12" fill="#3b0d0d" stroke="#ef4444"/>
+      <text x="48" y="16.5" font-size="12" font-weight="700" fill="#fca5a5" text-anchor="middle">FAILED</text>
+    </g>
+    <text x="132" y="172.5" font-size="12" fill="#64748b">from before/after snapshots - not from logs</text>
+  </g>
+</svg>

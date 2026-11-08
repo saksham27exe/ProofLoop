@@ -146,7 +146,7 @@ def _llm_card(stats: dict | None = None) -> None:
     state = chip("connected", "green") if online else chip("verification-only mode", "amber")
     avg = fmt_ms(stats.get("avg_verification_ms")) if stats else "-"
     show_html(
-        f'<div class="pl-card"><div class="pl-card-title">Local LLM</div>'
+        f'<div class="pl-card"><div class="pl-card-title">{"Cloud LLM (NVIDIA NIM)" if llm.get("backend") == "cloud" else "Local LLM"}</div>'
         f'<div style="display:flex;justify-content:space-between;align-items:center"><b>{esc(llm.get("model", "-"))}</b>{state}</div>'
         f'<div class="pl-kpi-sub" style="margin-top:.45rem">{esc(llm.get("message", ""))}</div>'
         f'<div class="pl-kpi-sub" style="margin-top:.35rem">Average verification time: <b>{esc(avg)}</b></div></div>'

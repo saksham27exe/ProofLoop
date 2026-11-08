@@ -64,7 +64,7 @@ def options(_: User = Depends(current_user), ctx: AppContext = Depends(get_ctx))
         })
     return {
         "environments": envs,
-        "agents": [a.model_dump() for a in AGENT_CONFIGS.values()],
+        "agents": [a.model_dump() for a in AGENT_CONFIGS.values() if a.interactive],
         "faults": [f.model_dump(mode="json") for f in FAULTS.values()],
     }
 

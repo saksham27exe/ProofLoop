@@ -30,7 +30,7 @@ class RuntimeSettings(BaseModel):
     llm_enabled: bool
     llm_narrative_enabled: bool
     llm_backend: Backend = "local"
-    cloud_model: str = Field("meta/llama-3.3-70b-instruct", min_length=1, max_length=100)
+    cloud_model: str = Field("nvidia/nemotron-3.5-lightning-30b-a3b", min_length=1, max_length=100)
 
 
 class RuntimeSettingsUpdate(BaseModel):

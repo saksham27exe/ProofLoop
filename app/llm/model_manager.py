@@ -18,10 +18,12 @@ RECOMMENDED_MODELS = [
     {"name": "qwen2.5:7b", "download": "~4.7 GB", "ram": "16 GB+", "note": "More robust on free-form phrasing."},
 ]
 
+# Checked against build.nvidia.com on 2026-11-08: all three list "Function Calling: Supported".
+# The Settings page also shows the live catalog, so a model removed by NVIDIA is flagged there.
 RECOMMENDED_CLOUD_MODELS = [
-    {"name": "meta/llama-3.3-70b-instruct", "note": "Recommended default: strong tool calling and JSON."},
-    {"name": "meta/llama-3.1-70b-instruct", "note": "Alternative 70B model with tool calling."},
-    {"name": "meta/llama-3.1-8b-instruct", "note": "Faster and lighter; less reliable on complex tasks."},
+    {"name": "nvidia/nemotron-3.5-lightning-30b-a3b", "note": "Recommended default: built for agents, fast (3B active parameters)."},
+    {"name": "nvidia/nemotron-3.5-super-vl-120b-a12b", "note": "Stronger reasoning and tool use; slower."},
+    {"name": "deepseek-ai/deepseek-v4.1-flash", "note": "Alternative with function calling and long context."},
 ]
 
 

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/saksham27exe/ProofLoop/blob/main/docs/README.md
+    about: Guides, configuration and API reference
+  - name: Report a security vulnerability
+    url: https://github.com/saksham27exe/ProofLoop/security/advisories/new
+    about: Please report vulnerabilities privately, not as a public issue

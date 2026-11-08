@@ -10,7 +10,7 @@ from app import __version__
 from app.api.dependencies import AppContext, current_user, get_ctx, get_session
 from app.database.models import User
 from app.llm.base import LLMUnavailable
-from app.llm.model_manager import RECOMMENDED_MODELS
+from app.llm.model_manager import RECOMMENDED_CLOUD_MODELS, RECOMMENDED_MODELS
 from app.services.runtime_settings import load_runtime
 from app.utils.timeutil import iso, utcnow
 
@@ -57,3 +57,20 @@ def models(ctx: AppContext = Depends(get_ctx), session: Session = Depends(get_se
     except LLMUnavailable:
         installed, reachable = [], False
     return {"reachable": reachable, "selected": rt.ollama_model, "installed": installed, "recommended": RECOMMENDED_MODELS}
+
+
+@router.get("/models/cloud")
+def cloud_models(ctx: AppContext = Depends(get_ctx), session: Session = Depends(get_session),
+                 _: User = Depends(current_user)) -> dict:
+    """Live chat-model catalog of the cloud endpoint (public list: no key and no user data is sent)."""
+    rt = load_runtime(session, ctx.settings)
+    try:
+        available = ctx.models.cloud_provider(rt.cloud_model).list_models()
+        reachable, message = True, ""
+    except LLMUnavailable as exc:
+        available, reachable, message = [], False, str(exc)
+    listed = set(available)
+    recommended = [{**m, "in_catalog": (m["name"] in listed) if reachable else None} for m in RECOMMENDED_CLOUD_MODELS]
+    return {"reachable": reachable, "message": message, "selected": rt.cloud_model,
+            "selected_in_catalog": (rt.cloud_model in listed) if reachable else None,
+            "available": available, "recommended": recommended}

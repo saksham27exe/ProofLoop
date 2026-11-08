@@ -33,6 +33,44 @@ def _browse(env: str, kind: str) -> None:
                 st.caption(f"Showing the first 1,000 of {len(rows):,} rows.")
 
 
+def _policy_editor(s: dict, is_admin: bool) -> None:
+    """Write policy (guardrails): enforced before any agent tool call reaches the data."""
+    data = call(api().source_policy, s["id"], quiet=True)
+    if data is None:
+        return
+    pol = data["policy"]
+    st.caption("Enforced **before** a tool call reaches the data, for ProofLoop's AI agent and for your own agents "
+               "using ProofLoop's tools. Blocked calls are recorded in the trace; the verdict still comes from the "
+               "independent snapshots.")
+    st.markdown("**Active rules:** " + (" · ".join(data["rules"]) if data["rules"] else "none - the agent may change anything "
+                                         "in this source (within the row limit)."))
+    is_folder = s["kind"] == "folder"
+    if is_folder:
+        read_only = st.text_input("Read-only paths (comma-separated prefixes)", value=", ".join(pol["read_only"]),
+                                  disabled=not is_admin, key=f"pol_ro_{s['id']}", placeholder="e.g. config, reports/final")
+        protected: list[str] = []
+    else:
+        tables = [e["collection"] for e in s["entities"]]
+        columns = [f'{e["collection"]}.{f}' for e in s["entities"] for f in e["fields"]]
+        ro = st.multiselect("Read-only tables", tables, default=[t for t in pol["read_only"] if t in tables],
+                            disabled=not is_admin, key=f"pol_ro_{s['id']}")
+        protected = st.multiselect("Protected columns (may not be written)", columns,
+                                   default=[c for c in pol["protected_columns"] if c in columns],
+                                   disabled=not is_admin, key=f"pol_pc_{s['id']}")
+    a, b = st.columns(2)
+    allow_delete = a.toggle("Allow deletions", value=pol["allow_delete"], disabled=not is_admin, key=f"pol_del_{s['id']}")
+    allow_insert = b.toggle("Allow new records / files" if is_folder else "Allow new records", value=pol["allow_insert"],
+                            disabled=not is_admin, key=f"pol_ins_{s['id']}")
+    if st.button("Save policy", key=f"pol_save_{s['id']}", type="primary", disabled=not is_admin, icon=":material/gpp_good:"):
+        body = {"read_only": [x.strip() for x in read_only.split(",") if x.strip()] if is_folder else ro,
+                "protected_columns": protected, "allow_delete": allow_delete, "allow_insert": allow_insert}
+        if call(api().update_source_policy, s["id"], body) is not None:
+            st.toast("Policy saved.", icon=":material/check_circle:")
+            st.rerun()
+    if not is_admin:
+        st.caption("Only administrators can change the policy.")
+
+
 def _source_card(s: dict, is_admin: bool, can_run: bool) -> None:
     status_tone = {"connected": "green", "unavailable": "red", "disabled": "slate"}.get(s["status"], "slate")
     with st.container(border=True):
@@ -87,6 +125,8 @@ def _source_card(s: dict, is_admin: bool, can_run: bool) -> None:
         if s["status"] == "connected":
             with st.expander("Browse the data (read-only)", icon=":material/table_view:"):
                 _browse(s["environment"], s["kind"])
+            with st.expander("Write policy (guardrails)", icon=":material/gpp_good:"):
+                _policy_editor(s, is_admin)
 
 
 def _connect_form() -> None:

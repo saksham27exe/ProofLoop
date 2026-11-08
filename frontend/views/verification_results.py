@@ -203,7 +203,7 @@ def render() -> None:
                 st.caption(narrative.get("disclaimer", ""))
                 st.write(narrative.get("text", ""))
         else:
-            st.caption("No model-generated narrative for this report (enable it under Settings → Local LLM).")
+            st.caption("No model-generated narrative for this report (enable it under Settings → Model).")
     with tabs[5]:
         st.markdown("Reports are immutable once created. The JSON export includes a SHA-256 report hash; "
                     "the API re-checks it on every export.")

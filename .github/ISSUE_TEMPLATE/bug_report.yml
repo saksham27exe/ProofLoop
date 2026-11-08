@@ -1,0 +1,46 @@
+name: Bug report
+description: Something doesn't work, or a verdict looks wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Do not paste API keys, passwords or real company data.** For security issues, see SECURITY.md instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. New Execution → Guided scenarios
+        2. Run "Wrong record modified"
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: verdict
+    attributes:
+      label: Verdict and execution id (if relevant)
+      placeholder: "FAILED, exec_..."
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Model backend
+      options: [No model (rules only), Local - Ollama, Cloud - NVIDIA NIM]
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: "Windows 11, Python 3.12, ProofLoop commit abc1234"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant lines from data\logs\ (check for secrets first).
+      render: text

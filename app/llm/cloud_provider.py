@@ -21,6 +21,9 @@ Implementation notes:
 from __future__ import annotations
 
 import json
+import re
+import time
+from collections.abc import Callable
 from typing import Any
 
 import httpx
@@ -33,6 +36,30 @@ from app.utils.timeutil import Stopwatch
 
 NVIDIA_NIM_URL = "https://integrate.api.nvidia.com/v1"
 NVIDIA_KEYS_PAGE = "https://build.nvidia.com"
+
+# Catalog entries that are not chat models (embedding, safety, reward, parsing, retrieval, image generation).
+_NON_CHAT = re.compile(r"embed|guard|safety|reward|parse|retriever|rerank|diffusion|topic-control|clip|nemoretriever", re.I)
+_THINK = re.compile(r"<think>.*?(</think>|$)", re.S | re.I)
+
+RATE_LIMIT_RETRIES = 2
+MAX_RETRY_WAIT_SECONDS = 20.0
+
+
+def _retry_delay(retry_after: str | None, attempt: int) -> float:
+    try:
+        wait = float(retry_after) if retry_after is not None else 0.0
+    except ValueError:
+        wait = 0.0
+    return min(MAX_RETRY_WAIT_SECONDS, wait if wait > 0 else 2.0 * (2 ** attempt))
+
+
+# Reasoning models spend tokens on hidden "thinking" before the answer; leave room for both.
+MAX_TOKENS = 4096
+
+
+def strip_reasoning(text: str) -> str:
+    """Remove <think>...</think> blocks some reasoning models put in the answer text."""
+    return _THINK.sub("", text or "").strip()
 
 
 class CloudProvider(LLMProvider):
@@ -47,6 +74,7 @@ class CloudProvider(LLMProvider):
         timeout: float = 120.0,
         max_retries: int = 2,
         transport: httpx.BaseTransport | None = None,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         if not (base_url.lower().startswith("https://") or is_loopback_url(base_url)):
             raise LLMError(f"Refusing cloud endpoint {base_url!r}: it must use HTTPS.")
@@ -56,6 +84,7 @@ class CloudProvider(LLMProvider):
         self.timeout = timeout
         self.max_retries = max_retries
         self._transport = transport
+        self._sleep = sleep
 
     @property
     def has_key(self) -> bool:
@@ -72,6 +101,19 @@ class CloudProvider(LLMProvider):
             trust_env=False,
             transport=self._transport,
         )
+
+    # ----------------------------------------------------------------- catalog
+    def list_models(self) -> list[str]:
+        """Live list of chat-capable model ids. The NIM catalog is public: no key is sent and no user data."""
+        try:
+            with httpx.Client(base_url=self.base_url, timeout=httpx.Timeout(15, connect=10.0), trust_env=False,
+                              transport=self._transport) as client:
+                response = client.get("/models", headers={"Accept": "application/json"})
+                response.raise_for_status()
+                data = response.json().get("data") or []
+        except (httpx.HTTPError, ValueError, AttributeError) as exc:
+            raise LLMUnavailable(f"Could not read the model catalog at {self.base_url} ({type(exc).__name__}).") from exc
+        return sorted({str(m.get("id")) for m in data if m.get("id") and not _NON_CHAT.search(str(m.get("id")))})
 
     # ----------------------------------------------------------------- health
     def health(self) -> LLMHealth:
@@ -100,7 +142,8 @@ class CloudProvider(LLMProvider):
         # Some endpoints do not list every model; an empty list is not proof that the model is missing.
         health.model_available = (self.model in ids) if ids else True
         health.message = (f"Cloud endpoint reachable; model '{self.model}' is available." if health.model_available
-                          else f"Cloud endpoint reachable, but model '{self.model}' is not offered there.")
+                          else f"Cloud endpoint reachable, but model '{self.model}' is not in its catalog any more "
+                               "(NVIDIA retires models). Choose a current one on Settings -> Model.")
         return health
 
     # ------------------------------------------------------------ translation
@@ -142,7 +185,7 @@ class CloudProvider(LLMProvider):
             except ValueError:
                 args = {}
             calls.append({"function": {"name": fn.get("name"), "arguments": args if isinstance(args, dict) else {}}})
-        return {"role": "assistant", "content": message.get("content") or "", "tool_calls": calls}
+        return {"role": "assistant", "content": strip_reasoning(message.get("content") or ""), "tool_calls": calls}
 
     # ------------------------------------------------------------------- call
     def _complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None, max_tokens: int) -> tuple[dict, str]:
@@ -151,20 +194,26 @@ class CloudProvider(LLMProvider):
         if tools:
             payload["tools"] = tools
             payload["tool_choice"] = "auto"
-        try:
-            with self._client() as client:
-                response = client.post("/chat/completions", json=payload)
-        except httpx.TimeoutException as exc:
-            raise LLMError(f"The cloud model did not answer within {self.timeout:.0f}s.") from exc
-        except httpx.HTTPError as exc:
-            raise LLMUnavailable(f"Could not reach the cloud endpoint ({type(exc).__name__}).") from exc
+        for attempt in range(RATE_LIMIT_RETRIES + 1):
+            try:
+                with self._client() as client:
+                    response = client.post("/chat/completions", json=payload)
+            except httpx.TimeoutException as exc:
+                raise LLMError(f"The cloud model did not answer within {self.timeout:.0f}s.") from exc
+            except httpx.HTTPError as exc:
+                raise LLMUnavailable(f"Could not reach the cloud endpoint ({type(exc).__name__}).") from exc
+            if response.status_code != 429 or attempt == RATE_LIMIT_RETRIES:
+                break
+            # Free tiers are rate-limited per minute: wait (honouring Retry-After) and try again.
+            self._sleep(_retry_delay(response.headers.get("retry-after"), attempt))
         status = response.status_code
         if status in (401, 403):
             raise LLMUnavailable("The cloud API rejected the key. Check PROOFLOOP_CLOUD_API_KEY in .env.")
         if status == 404:
             raise LLMUnavailable(f"Model '{self.model}' is not available at the cloud endpoint.")
         if status == 429:
-            raise LLMError("The cloud API rate limit was reached (free tier: about 40 requests/minute). Wait a minute and retry.")
+            raise LLMError(f"The cloud API rate limit was still reached after {RATE_LIMIT_RETRIES} retries (free tier: about "
+                           "40 requests/minute). Wait a minute and try again.")
         if status >= 400:
             try:
                 body = response.json()
@@ -173,18 +222,23 @@ class CloudProvider(LLMProvider):
                 detail = response.text[:300]
             if tools and "tool" in detail.lower():
                 raise LLMError(f"Model '{self.model}' does not support tool calling on this endpoint. "
-                               "Choose a tool-capable model such as meta/llama-3.3-70b-instruct.")
+                               "Choose a model whose build.nvidia.com page lists function calling, such as nvidia/nemotron-3.5-lightning-30b-a3b.")
             raise LLMError(f"The cloud API returned HTTP {status}: {detail}")
         try:
             data = response.json()
-            message = data["choices"][0]["message"] or {}
+            choice = data["choices"][0]
+            message = choice["message"] or {}
         except (ValueError, KeyError, IndexError, TypeError) as exc:
             raise LLMResponseError("The cloud API returned an unexpected response envelope.") from exc
+        if (choice.get("finish_reason") == "length" and not message.get("tool_calls")
+                and not strip_reasoning(message.get("content") or "")):
+            raise LLMError(f"Model '{self.model}' used its whole output budget ({max_tokens} tokens) on reasoning without "
+                           "answering. Try again or choose a faster model.")
         return message, data.get("model") or self.model
 
     def chat_with_tools(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]]) -> tuple[dict[str, Any], str]:
         """Same contract as :meth:`OllamaProvider.chat_with_tools`."""
-        message, model = self._complete(messages, tools, max_tokens=1024)
+        message, model = self._complete(messages, tools, max_tokens=MAX_TOKENS)
         return self._from_openai(message), model
 
     def generate(
@@ -200,8 +254,8 @@ class CloudProvider(LLMProvider):
         attempts, last_error = 0, ""
         while attempts <= self.max_retries:
             attempts += 1
-            message, model = self._complete(messages, None, max_tokens=1024)
-            content = message.get("content") or ""
+            message, model = self._complete(messages, None, max_tokens=MAX_TOKENS)
+            content = strip_reasoning(message.get("content") or "")
             if response_schema is None:
                 return LLMResult(text=content, model=model, latency_ms=timer.ms, attempts=attempts)
             try:

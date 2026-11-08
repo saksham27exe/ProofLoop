@@ -81,7 +81,7 @@ class ExecutionCreate(BaseModel):
     instruction: str = Field(min_length=1, max_length=2000)
     environment: str = Field(pattern=r"^(database|api|file|src_[a-z0-9]{1,12})$",
                              description="A built-in sandbox (database, api, file) or a connected source (src_<id>)")
-    agent_config: Literal["scripted", "llm", "ai_agent"] = "scripted"
+    agent_config: Literal["scripted", "llm", "ai_agent", "external"] = "scripted"
     fault_mode: str = Field("none", max_length=48)
     scenario_id: str | None = Field(None, max_length=64)
     reset_sandbox: bool = False

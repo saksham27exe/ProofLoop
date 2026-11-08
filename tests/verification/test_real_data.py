@@ -341,3 +341,19 @@ def test_sources_api(client, admin_headers, tmp_path, settings):
     assert client.post("/executions/exec_doesnotexist/undo", headers=h).status_code == 404
     assert client.delete(f"/sources/{src['id']}", headers=h).status_code == 200
     assert shop.is_file()  # disconnecting never touches the data
+
+
+def test_write_policy_also_binds_proofloops_own_ai_agent(real):
+    from app.services.policies import SourcePolicy, save_policy
+
+    svc, _sources, run = real
+    env = svc.registry.get("src_practice")
+    with svc.db.session() as s:
+        save_policy(s, env, SourcePolicy(protected_columns=["customers.email"]), "admin")
+    report = run("Change the email of customer 5 to jonas.m@newmail.example",
+                 call("update_rows", table="customers", where={"id": 5}, values={"email": "jonas.m@newmail.example"}),
+                 say("DONE: updated the email."))
+    assert _verdict(report) == "FAILED"  # the call was blocked, so the requested change never happened
+    events = svc.storage.load(report["_exec_id"])
+    blocked = [e for e in events.events if e.event_type == "tool_response" and "Blocked by policy" in str(e.output)]
+    assert blocked

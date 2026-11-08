@@ -47,12 +47,36 @@ def _backend_section(view: dict, is_admin: bool) -> None:
         )
         cloud_model, consent_ok = rt["cloud_model"], True
         if choice == "cloud":
-            recommended = [m["name"] for m in cloud.get("recommended_models", [])]
-            cloud_model = st.selectbox("Cloud model", list(dict.fromkeys([rt["cloud_model"], *recommended])),
-                                       disabled=not is_admin, help="Choose a model that supports tool calling (needed by the AI agent).")
-            custom = st.text_input("…or type a NIM model id", placeholder="e.g. meta/llama-3.1-70b-instruct",
-                                   disabled=not is_admin, key="cloud_custom")
-            cloud_model = custom.strip() or cloud_model
+            if "_cloud_catalog" not in st.session_state:
+                st.session_state["_cloud_catalog"] = call(api().cloud_models, quiet=True) or {"reachable": False}
+            catalog = st.session_state["_cloud_catalog"]
+            listed = set(catalog.get("available") or [])
+            rec = catalog.get("recommended") or [{"name": m["name"], "note": m["note"], "in_catalog": None}
+                                                  for m in cloud.get("recommended_models", [])]
+            # Recommended (still offered) first, then the current choice, then everything else in the live catalog.
+            options = list(dict.fromkeys([*(m["name"] for m in rec if m.get("in_catalog") is not False),
+                                          rt["cloud_model"], *sorted(listed)]))
+            notes = {m["name"]: m["note"] for m in rec}
+
+            def _label(name: str) -> str:
+                tag = " · recommended" if name in notes else ""
+                gone = " · NOT IN CATALOG" if catalog.get("reachable") and name not in listed else ""
+                return f"{name}{tag}{gone}"
+
+            cloud_model = st.selectbox("Cloud model", options, format_func=_label, disabled=not is_admin,
+                                       help="Recommended models list function calling on build.nvidia.com (needed by the AI agent). "
+                                            "Other models from the live catalog may not support tool calling.")
+            if cloud_model in notes:
+                st.caption(notes[cloud_model])
+            if catalog.get("reachable"):
+                st.caption(f"Live NVIDIA catalog: {len(listed)} chat models (fetched without your key or data).")
+                if cloud_model not in listed:
+                    st.warning(f"`{cloud_model}` is no longer offered by NVIDIA - pick a current model.", icon=":material/error:")
+            else:
+                st.caption("Could not read the live model catalog (offline?); showing the built-in recommendations.")
+            if st.button("Refresh model list", icon=":material/refresh:", key="refresh_catalog"):
+                st.session_state.pop("_cloud_catalog", None)
+                st.rerun()
             if not cloud.get("api_key_configured"):
                 st.warning("No API key configured. Create a free key at build.nvidia.com, add "
                            "`PROOFLOOP_CLOUD_API_KEY=nvapi-...` to `.env`, then restart ProofLoop (`run.ps1`).",
@@ -63,7 +87,9 @@ def _backend_section(view: dict, is_admin: bool) -> None:
                          icon=":material/warning:")
                 consent_ok = st.checkbox(CONSENT_LABEL, key="cloud_consent_box", disabled=not is_admin)
         switching_on = choice == "cloud" and not active
-        blocked = switching_on and (not consent_ok or not cloud.get("api_key_configured"))
+        catalog = st.session_state.get("_cloud_catalog") or {}
+        retired = choice == "cloud" and catalog.get("reachable") and cloud_model not in set(catalog.get("available") or [])
+        blocked = retired or (switching_on and (not consent_ok or not cloud.get("api_key_configured")))
         label = "Switch to cloud model" if switching_on else ("Switch to local model" if active and choice == "local" else "Save backend")
         if st.button(label, type="primary", disabled=not is_admin or blocked, key="save_backend",
                      icon=":material/cloud_upload:" if switching_on else ":material/save:"):

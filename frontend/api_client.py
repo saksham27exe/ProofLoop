@@ -35,7 +35,7 @@ class ApiClient:
                            f"Cannot reach the ProofLoop backend at {self.base_url}. Start it with .\\run.ps1 "
                            "(or: uvicorn app.main:app --host 127.0.0.1 --port 8000).") from None
         except httpx.TimeoutException:
-            raise ApiError(0, "timeout", "The backend took too long to respond. A local model may still be loading - try again.") from None
+            raise ApiError(0, "timeout", "The backend took too long to respond. The model may still be loading or busy - try again.") from None
         if response.is_success:
             if raw:
                 return response
@@ -92,6 +92,15 @@ class ApiClient:
 
     def models(self) -> dict:
         return self._request("GET", "/models", timeout=15)
+
+    def source_policy(self, source_id: str) -> dict:
+        return self._request("GET", f"/sources/{source_id}/policy")
+
+    def update_source_policy(self, source_id: str, body: dict) -> dict:
+        return self._request("PUT", f"/sources/{source_id}/policy", json=body)
+
+    def cloud_models(self) -> dict:
+        return self._request("GET", "/models/cloud", timeout=25)
 
     def stats(self) -> dict:
         return self._request("GET", "/stats")

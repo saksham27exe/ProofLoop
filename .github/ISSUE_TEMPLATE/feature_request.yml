@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest a connector, framework adapter, check or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+  - type: textarea
+    id: verification
+    attributes:
+      label: How should it be verified?
+      description: ProofLoop verdicts must stay deterministic. Which evidence would establish the outcome?

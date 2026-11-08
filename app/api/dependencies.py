@@ -19,6 +19,7 @@ from app.environments.registry import EnvironmentRegistry
 from app.llm.model_manager import ModelManager
 from app.services.data_sources import DataSourceService
 from app.services.execution_service import ExecutionService
+from app.services.external_sessions import ExternalSessionService
 from app.utils.timeutil import utcnow
 
 
@@ -31,8 +32,13 @@ class AppContext:
     auth: AuthService
     executions: ExecutionService
     sources: DataSourceService
+    sessions: ExternalSessionService = None  # type: ignore[assignment]  # set in __post_init__
     benchmark_lock: threading.Lock = field(default_factory=threading.Lock)
     started_at: datetime = field(default_factory=utcnow)
+
+    def __post_init__(self) -> None:
+        if self.sessions is None:
+            self.sessions = ExternalSessionService(self.executions)
 
 
 def build_context(settings: Settings) -> AppContext:

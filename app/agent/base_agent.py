@@ -22,10 +22,12 @@ class AgentConfig(BaseModel):
     id: str
     name: str
     description: str
-    planner: Literal["rules", "llm", "tool_calling"]
+    planner: Literal["rules", "llm", "tool_calling", "external"]
     requires_llm: bool = False
-    # "sandbox": built-in demo environments only; "sources": connected data sources only.
-    environments: Literal["sandbox", "sources"] = "sandbox"
+    # "sandbox": built-in demo environments only; "sources": connected data sources only; "any": both.
+    environments: Literal["sandbox", "sources", "any"] = "sandbox"
+    # False for agents that are driven through the API/SDK instead of the dashboard's "Run" button.
+    interactive: bool = True
 
 
 AGENT_CONFIGS: dict[str, AgentConfig] = {
@@ -50,6 +52,16 @@ AGENT_CONFIGS: dict[str, AgentConfig] = {
         planner="tool_calling",
         requires_llm=True,
         environments="sources",
+    ),
+    "external": AgentConfig(
+        id="external",
+        name="Your own agent (API / SDK)",
+        description="Any agent - LangChain, CrewAI, plain Python or another language - runs the task itself through a "
+                    "verification session: it calls ProofLoop's tools over HTTP (or reports its own tool calls), and "
+                    "ProofLoop verifies the outcome from independent snapshots.",
+        planner="external",
+        environments="any",
+        interactive=False,
     ),
 }
 

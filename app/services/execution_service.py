@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import secrets
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -46,6 +47,7 @@ from app.llm.base import LLMError
 from app.llm.model_manager import ModelManager
 from app.llm.prompts import NARRATIVE_SYSTEM, narrative_prompt
 from app.reporting.report_generator import build_report
+from app.services.policies import PolicyToolbox, load_policy
 from app.services.runtime_settings import RuntimeSettings, load_runtime
 from app.utils.hashing import hash_obj
 from app.utils.logging import get_logger
@@ -67,6 +69,24 @@ class ExecutionError(Exception):
         self.code = code
         self.message = message
         self.status_code = status_code
+
+
+EXTERNAL_SESSION_TTL = timedelta(minutes=60)
+
+
+def active_external_session(session: Session, env: str, *, include_expired: bool = False) -> dict[str, Any] | None:
+    """The external-agent session currently holding ``env`` (see app.services.external_sessions), if any.
+
+    Sessions older than EXTERNAL_SESSION_TTL no longer block the environment."""
+    active = repo.get_setting(session, f"external_active:{env}", None) or None
+    if active and not include_expired:
+        try:
+            age = utcnow() - datetime.fromisoformat(str(active.get("started_at")).rstrip("Z"))
+        except (ValueError, TypeError):
+            return active
+        if age >= EXTERNAL_SESSION_TTL:
+            return None
+    return active
 
 
 def load_scenarios(sample_dir: Path) -> list[dict[str, Any]]:
@@ -152,10 +172,12 @@ class ExecutionService:
             raise ExecutionError("invalid_fault", f"Unknown fault mode {fault_mode!r}.", 422) from exc
         is_source = not self.registry.is_builtin(environment)
         wanted = "sources" if is_source else "sandbox"
-        if AGENT_CONFIGS[agent_config].environments != wanted:
-            allowed = [a.name for a in AGENT_CONFIGS.values() if a.environments == wanted]
+        if AGENT_CONFIGS[agent_config].environments not in (wanted, "any"):
+            allowed = [a.name for a in AGENT_CONFIGS.values() if a.environments in (wanted, "any")]
             raise ExecutionError("invalid_agent", f"{AGENT_CONFIGS[agent_config].name} cannot run on "
                                  f"{'a connected data source' if is_source else 'a built-in sandbox'}. Use: {', '.join(allowed)}.", 422)
+        if agent_config == "external" and fault != FaultMode.NONE:
+            raise ExecutionError("invalid_fault", "Fault injection does not apply to your own agent: it runs exactly as it is.", 422)
         if is_source and fault != FaultMode.NONE:
             raise ExecutionError("invalid_fault", "Fault injection is only available in the built-in sandboxes; "
                                  "on connected data the agent runs exactly as it is.", 422)
@@ -188,8 +210,9 @@ class ExecutionService:
                     id=exec_id,
                     task_description=instruction,
                     environment=environment,
-                    agent_name=ToolCallingAgent.name if agent_config == "ai_agent" else SampleAgent.name,
-                    agent_framework=ToolCallingAgent.framework if agent_config == "ai_agent" else SampleAgent.framework,
+                    agent_name={"ai_agent": ToolCallingAgent.name, "external": "external-agent"}.get(agent_config, SampleAgent.name),
+                    agent_framework={"ai_agent": ToolCallingAgent.framework, "external": "external"}.get(
+                        agent_config, SampleAgent.framework),
                     agent_config=agent_config,
                     fault_mode=fault.value,
                     scenario_id=scenario_id,
@@ -267,8 +290,15 @@ class ExecutionService:
                     "The task is ambiguous: " + " ".join(plan.ambiguities) + " Rephrase it, or run anyway to see an INCONCLUSIVE verdict.",
                     409,
                 )
+            if ex.agent_config == "external":
+                raise ExecutionError("external_agent", "This execution is for your own agent: start a verification session "
+                                     "(POST /executions/{id}/session/start) instead of running ProofLoop's agent.", 409)
             if plan.requires_approval and not approved:
                 raise ExecutionError("approval_required", plan.approval_reason or "This operation requires approval.", 409)
+            active = active_external_session(s, ex.environment)
+            if active:
+                raise ExecutionError("session_active", f"An external agent session ({active['execution_id']}) is running on "
+                                     "this environment. Finish or abort it first.", 409)
             if plan.requires_approval:
                 ex.approved_by = user.username if user else "system"
             ex.execution_status = "running"
@@ -308,7 +338,11 @@ class ExecutionService:
                  "sandbox_reset": reset and not is_source, "backup": backup_note},
             )
             if agent_config == "ai_agent":
-                agent = ToolCallingAgent(env, self.models.for_runtime(rt))
+                with self.db.session() as s:
+                    policy = load_policy(s, env_name)
+                if not policy.is_empty:
+                    collector.annotate("Write policy enforced: " + "; ".join(policy.describe()), policy.model_dump())
+                agent = ToolCallingAgent(env, self.models.for_runtime(rt), toolbox=PolicyToolbox(env.toolbox(), policy))
             else:
                 planner = LLMPlanner(self.models.for_runtime(rt)) if agent_config == "llm" else RulePlanner()
                 agent = SampleAgent(env, planner, fault)

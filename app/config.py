@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     # Cloud LLM (opt-in, NVIDIA NIM / OpenAI-compatible) -------------------
     # Having a key here does NOT enable the cloud: an admin must switch the backend and accept the notice.
     cloud_base_url: str = "https://integrate.api.nvidia.com/v1"
-    cloud_model: str = "meta/llama-3.3-70b-instruct"
+    cloud_model: str = "nvidia/nemotron-3.5-lightning-30b-a3b"
     cloud_api_key: SecretStr | None = None
     cloud_timeout_seconds: float = Field(120.0, gt=0, le=600)
     cloud_max_retries: int = Field(2, ge=0, le=5)
